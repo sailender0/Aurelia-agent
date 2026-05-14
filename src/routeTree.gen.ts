@@ -20,6 +20,7 @@ import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
 import { Route as AuthenticatedExecRouteImport } from './routes/_authenticated/exec'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicHooksFridayDraftsRouteImport } from './routes/api/public/hooks/friday-drafts'
 import { Route as ApiPublicHooksActivitySignalRouteImport } from './routes/api/public/hooks/activity-signal'
 
 const SignupRoute = SignupRouteImport.update({
@@ -76,6 +77,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksFridayDraftsRoute =
+  ApiPublicHooksFridayDraftsRouteImport.update({
+    id: '/api/public/hooks/friday-drafts',
+    path: '/api/public/hooks/friday-drafts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksActivitySignalRoute =
   ApiPublicHooksActivitySignalRouteImport.update({
     id: '/api/public/hooks/activity-signal',
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/signals': typeof AuthenticatedSignalsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
+  '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,6 +116,7 @@ export interface FileRoutesByTo {
   '/signals': typeof AuthenticatedSignalsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
+  '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,6 +132,7 @@ export interface FileRoutesById {
   '/_authenticated/signals': typeof AuthenticatedSignalsRoute
   '/_authenticated/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
+  '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/timesheet'
     | '/api/public/hooks/activity-signal'
+    | '/api/public/hooks/friday-drafts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/timesheet'
     | '/api/public/hooks/activity-signal'
+    | '/api/public/hooks/friday-drafts'
   id:
     | '__root__'
     | '/'
@@ -165,6 +177,7 @@ export interface FileRouteTypes {
     | '/_authenticated/signals'
     | '/_authenticated/timesheet'
     | '/api/public/hooks/activity-signal'
+    | '/api/public/hooks/friday-drafts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -173,6 +186,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiPublicHooksActivitySignalRoute: typeof ApiPublicHooksActivitySignalRoute
+  ApiPublicHooksFridayDraftsRoute: typeof ApiPublicHooksFridayDraftsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -254,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/friday-drafts': {
+      id: '/api/public/hooks/friday-drafts'
+      path: '/api/public/hooks/friday-drafts'
+      fullPath: '/api/public/hooks/friday-drafts'
+      preLoaderRoute: typeof ApiPublicHooksFridayDraftsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/activity-signal': {
       id: '/api/public/hooks/activity-signal'
       path: '/api/public/hooks/activity-signal'
@@ -294,6 +315,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiPublicHooksActivitySignalRoute: ApiPublicHooksActivitySignalRoute,
+  ApiPublicHooksFridayDraftsRoute: ApiPublicHooksFridayDraftsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
