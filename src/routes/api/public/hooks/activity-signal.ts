@@ -33,13 +33,35 @@ export const Route = createFileRoute("/api/public/hooks/activity-signal")({
   server: {
     handlers: {
      POST: async ({ request }) => {
+  // 1. AUTH FIRST: Check GitHub signature or manual secret
   const signature = request.headers.get("x-hub-signature-256") || request.headers.get("X-Hub-Signature-256");
   const auth = request.headers.get("x-ingest-secret");
 
-  // Allow if it's a signed GitHub request OR if the secret matches
   if (!signature && (!auth || auth !== process.env.ACTIVITY_INGEST_SECRET)) {
     return new Response("Unauthorized", { status: 401 });
   }
+
+  // 2. PING CHECK: Handle GitHub's verification handshake
+  const eventType = request.headers.get("x-github-event");
+  if (eventType === "ping") {
+    return Response.json({ message: "pong" }, { status: 200 });
+  }
+
+  // 3. PAYLOAD PROCESSING: Parse JSON for real signals
+  let body: unknown;
+  try { 
+    body = await request.json(); 
+  } catch { 
+    return new Response("Invalid JSON", { status: 400 }); 
+  }
+
+  // 4. SCHEMA VALIDATION: Run your existing Zod logic
+  const parsed = BodySchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // ... rest of your resolveUserId and Supabase insert logic
         let body: unknown;
         try { body = await request.json(); }
         catch { return new Response("Invalid JSON", { status: 400 }); }
