@@ -14,11 +14,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTimesheetRouteImport } from './routes/_authenticated/timesheet'
+import { Route as AuthenticatedSignalsRouteImport } from './routes/_authenticated/signals'
 import { Route as AuthenticatedManagerRouteImport } from './routes/_authenticated/manager'
 import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
 import { Route as AuthenticatedExecRouteImport } from './routes/_authenticated/exec'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicHooksActivitySignalRouteImport } from './routes/api/public/hooks/activity-signal'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -42,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedTimesheetRoute = AuthenticatedTimesheetRouteImport.update({
   id: '/timesheet',
   path: '/timesheet',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSignalsRoute = AuthenticatedSignalsRouteImport.update({
+  id: '/signals',
+  path: '/signals',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedManagerRoute = AuthenticatedManagerRouteImport.update({
@@ -69,6 +76,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksActivitySignalRoute =
+  ApiPublicHooksActivitySignalRouteImport.update({
+    id: '/api/public/hooks/activity-signal',
+    path: '/api/public/hooks/activity-signal',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,7 +92,9 @@ export interface FileRoutesByFullPath {
   '/exec': typeof AuthenticatedExecRoute
   '/hr': typeof AuthenticatedHrRoute
   '/manager': typeof AuthenticatedManagerRoute
+  '/signals': typeof AuthenticatedSignalsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,7 +105,9 @@ export interface FileRoutesByTo {
   '/exec': typeof AuthenticatedExecRoute
   '/hr': typeof AuthenticatedHrRoute
   '/manager': typeof AuthenticatedManagerRoute
+  '/signals': typeof AuthenticatedSignalsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,7 +120,9 @@ export interface FileRoutesById {
   '/_authenticated/exec': typeof AuthenticatedExecRoute
   '/_authenticated/hr': typeof AuthenticatedHrRoute
   '/_authenticated/manager': typeof AuthenticatedManagerRoute
+  '/_authenticated/signals': typeof AuthenticatedSignalsRoute
   '/_authenticated/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,7 +135,9 @@ export interface FileRouteTypes {
     | '/exec'
     | '/hr'
     | '/manager'
+    | '/signals'
     | '/timesheet'
+    | '/api/public/hooks/activity-signal'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -127,7 +148,9 @@ export interface FileRouteTypes {
     | '/exec'
     | '/hr'
     | '/manager'
+    | '/signals'
     | '/timesheet'
+    | '/api/public/hooks/activity-signal'
   id:
     | '__root__'
     | '/'
@@ -139,7 +162,9 @@ export interface FileRouteTypes {
     | '/_authenticated/exec'
     | '/_authenticated/hr'
     | '/_authenticated/manager'
+    | '/_authenticated/signals'
     | '/_authenticated/timesheet'
+    | '/api/public/hooks/activity-signal'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -147,6 +172,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicHooksActivitySignalRoute: typeof ApiPublicHooksActivitySignalRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -186,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTimesheetRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/signals': {
+      id: '/_authenticated/signals'
+      path: '/signals'
+      fullPath: '/signals'
+      preLoaderRoute: typeof AuthenticatedSignalsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/manager': {
       id: '/_authenticated/manager'
       path: '/manager'
@@ -221,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/activity-signal': {
+      id: '/api/public/hooks/activity-signal'
+      path: '/api/public/hooks/activity-signal'
+      fullPath: '/api/public/hooks/activity-signal'
+      preLoaderRoute: typeof ApiPublicHooksActivitySignalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -230,6 +270,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedExecRoute: typeof AuthenticatedExecRoute
   AuthenticatedHrRoute: typeof AuthenticatedHrRoute
   AuthenticatedManagerRoute: typeof AuthenticatedManagerRoute
+  AuthenticatedSignalsRoute: typeof AuthenticatedSignalsRoute
   AuthenticatedTimesheetRoute: typeof AuthenticatedTimesheetRoute
 }
 
@@ -239,6 +280,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedExecRoute: AuthenticatedExecRoute,
   AuthenticatedHrRoute: AuthenticatedHrRoute,
   AuthenticatedManagerRoute: AuthenticatedManagerRoute,
+  AuthenticatedSignalsRoute: AuthenticatedSignalsRoute,
   AuthenticatedTimesheetRoute: AuthenticatedTimesheetRoute,
 }
 
@@ -251,7 +293,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiPublicHooksActivitySignalRoute: ApiPublicHooksActivitySignalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
