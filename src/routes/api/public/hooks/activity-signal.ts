@@ -46,7 +46,32 @@ export const Route = createFileRoute("/api/public/hooks/activity-signal")({
         if (eventType === "ping") {
           return Response.json({ message: "pong" }, { status: 200 });
         }
-
+        let body: any;
+        try { 
+          body = await request.json(); 
+        } catch { 
+          return new Response("Invalid JSON", { status: 400 }); 
+        }
+        
+        // --- NEW TRANSLATION BLOCK ---
+        const eventType = request.headers.get("x-github-event");
+        
+        if (eventType === "push") {
+          // Translate GitHub's payload into your SignalSchema format
+          body = {
+            source: "github",
+            signal_type: "push",
+            external_user_id: body.sender?.login, // This will be "sailender0"
+            occurred_at: new Date().toISOString(),
+            metadata: {
+              repository: body.repository?.full_name,
+              commit_message: body.head_commit?.message,
+            }
+          };
+        }
+        // --- END TRANSLATION BLOCK ---
+        
+        const parsed = BodySchema.safeParse(body);
         // 3. Parse Body
         let body: unknown;
         try {
