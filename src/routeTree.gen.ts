@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTimesheetRouteImport } from './routes/_authenticated/timesheet'
+import { Route as AuthenticatedTeamsRouteImport } from './routes/_authenticated/teams'
 import { Route as AuthenticatedSignalsRouteImport } from './routes/_authenticated/signals'
 import { Route as AuthenticatedManagerRouteImport } from './routes/_authenticated/manager'
 import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedTimesheetRoute = AuthenticatedTimesheetRouteImport.update({
   id: '/timesheet',
   path: '/timesheet',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTeamsRoute = AuthenticatedTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSignalsRoute = AuthenticatedSignalsRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/hr': typeof AuthenticatedHrRoute
   '/manager': typeof AuthenticatedManagerRoute
   '/signals': typeof AuthenticatedSignalsRoute
+  '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/hr': typeof AuthenticatedHrRoute
   '/manager': typeof AuthenticatedManagerRoute
   '/signals': typeof AuthenticatedSignalsRoute
+  '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/hr': typeof AuthenticatedHrRoute
   '/_authenticated/manager': typeof AuthenticatedManagerRoute
   '/_authenticated/signals': typeof AuthenticatedSignalsRoute
+  '/_authenticated/teams': typeof AuthenticatedTeamsRoute
   '/_authenticated/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/hr'
     | '/manager'
     | '/signals'
+    | '/teams'
     | '/timesheet'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/hr'
     | '/manager'
     | '/signals'
+    | '/teams'
     | '/timesheet'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hr'
     | '/_authenticated/manager'
     | '/_authenticated/signals'
+    | '/_authenticated/teams'
     | '/_authenticated/timesheet'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/timesheet'
       fullPath: '/timesheet'
       preLoaderRoute: typeof AuthenticatedTimesheetRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/teams': {
+      id: '/_authenticated/teams'
+      path: '/teams'
+      fullPath: '/teams'
+      preLoaderRoute: typeof AuthenticatedTeamsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/signals': {
@@ -292,6 +311,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHrRoute: typeof AuthenticatedHrRoute
   AuthenticatedManagerRoute: typeof AuthenticatedManagerRoute
   AuthenticatedSignalsRoute: typeof AuthenticatedSignalsRoute
+  AuthenticatedTeamsRoute: typeof AuthenticatedTeamsRoute
   AuthenticatedTimesheetRoute: typeof AuthenticatedTimesheetRoute
 }
 
@@ -302,6 +322,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHrRoute: AuthenticatedHrRoute,
   AuthenticatedManagerRoute: AuthenticatedManagerRoute,
   AuthenticatedSignalsRoute: AuthenticatedSignalsRoute,
+  AuthenticatedTeamsRoute: AuthenticatedTeamsRoute,
   AuthenticatedTimesheetRoute: AuthenticatedTimesheetRoute,
 }
 
