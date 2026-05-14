@@ -32,51 +32,45 @@ async function resolveUserId(s: z.infer<typeof SignalSchema>): Promise<string | 
 export const Route = createFileRoute("/api/public/hooks/activity-signal")({
   server: {
     handlers: {
-     POST: async ({ request }) => {
-  // 1. AUTH FIRST: Check GitHub signature or manual secret
-  const signature = request.headers.get("x-hub-signature-256") || request.headers.get("X-Hub-Signature-256");
-  const auth = request.headers.get("x-ingest-secret");
+      POST: async ({ request }) => {
+        // 1. Auth Check
+        const signature = request.headers.get("x-hub-signature-256") || request.headers.get("X-Hub-Signature-256");
+        const auth = request.headers.get("x-ingest-secret");
 
-  if (!signature && (!auth || auth !== process.env.ACTIVITY_INGEST_SECRET)) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+        if (!signature && (!auth || auth !== process.env.ACTIVITY_INGEST_SECRET)) {
+          return new Response("Unauthorized", { status: 401 });
+        }
 
-  // 2. PING CHECK: Handle GitHub's verification handshake
-  const eventType = request.headers.get("x-github-event");
-  if (eventType === "ping") {
-    return Response.json({ message: "pong" }, { status: 200 });
-  }
+        // 2. Ping Check
+        const eventType = request.headers.get("x-github-event");
+        if (eventType === "ping") {
+          return Response.json({ message: "pong" }, { status: 200 });
+        }
 
-  // 3. PAYLOAD PROCESSING: Parse JSON for real signals
-  let body: unknown;
-  try { 
-    body = await request.json(); 
-  } catch { 
-    return new Response("Invalid JSON", { status: 400 }); 
-  }
-
-  // 4. SCHEMA VALIDATION: Run your existing Zod logic
-  const parsed = BodySchema.safeParse(body);
-  if (!parsed.success) {
-    return Response.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-
-  // ... rest of your resolveUserId and Supabase insert logic
+        // 3. Parse Body
         let body: unknown;
-        try { body = await request.json(); }
-        catch { return new Response("Invalid JSON", { status: 400 }); }
+        try {
+          body = await request.json();
+        } catch (e) {
+          return new Response("Invalid JSON", { status: 400 });
+        }
 
+        // 4. Validate & Process
         const parsed = BodySchema.safeParse(body);
         if (!parsed.success) {
           return Response.json({ error: parsed.error.flatten() }, { status: 400 });
         }
-        const list = "signals" in parsed.data ? parsed.data.signals : [parsed.data];
 
+        const list = "signals" in parsed.data ? parsed.data.signals : [parsed.data];
         const rows: any[] = [];
         const skipped: any[] = [];
+
         for (const s of list) {
           const userId = await resolveUserId(s);
-          if (!userId) { skipped.push({ source: s.source, ext: s.external_user_id ?? s.user_email, reason: "user_not_mapped" }); continue; }
+          if (!userId) {
+            skipped.push({ source: s.source, ext: s.external_user_id ?? s.user_email, reason: "user_not_mapped" });
+            continue;
+          }
           rows.push({
             user_id: userId,
             source: s.source,
@@ -87,10 +81,12 @@ export const Route = createFileRoute("/api/public/hooks/activity-signal")({
             metadata: s.metadata ?? {},
           });
         }
+
         if (rows.length) {
           const { error } = await supabaseAdmin.from("activity_signals").insert(rows);
           if (error) return Response.json({ error: error.message }, { status: 500 });
         }
+
         return Response.json({ ingested: rows.length, skipped });
       },
     },
