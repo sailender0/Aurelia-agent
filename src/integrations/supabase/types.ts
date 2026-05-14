@@ -14,16 +14,335 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_signals: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          project_hint: string | null
+          signal_type: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          metadata?: Json
+          occurred_at: string
+          project_hint?: string | null
+          signal_type: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          project_hint?: string | null
+          signal_type?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      draft_timesheets: {
+        Row: {
+          ai_confidence: number | null
+          ai_summary: string | null
+          created_at: string
+          id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_summary?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_summary?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      identity_mappings: {
+        Row: {
+          external_id: string
+          id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          external_id: string
+          id?: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          external_id?: string
+          id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string
+          employment_type: string
+          id: string
+          manager_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          email: string
+          employment_type?: string
+          id: string
+          manager_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string
+          employment_type?: string
+          id?: string
+          manager_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          billable: boolean
+          client_id: string
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          billable?: boolean
+          client_id: string
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          billable?: boolean
+          client_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timesheet_approvals: {
+        Row: {
+          comment: string | null
+          decided_at: string
+          decision: string
+          id: string
+          manager_id: string
+          timesheet_id: string
+        }
+        Insert: {
+          comment?: string | null
+          decided_at?: string
+          decision: string
+          id?: string
+          manager_id: string
+          timesheet_id: string
+        }
+        Update: {
+          comment?: string | null
+          decided_at?: string
+          decision?: string
+          id?: string
+          manager_id?: string
+          timesheet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timesheet_approvals_timesheet_id_fkey"
+            columns: ["timesheet_id"]
+            isOneToOne: false
+            referencedRelation: "draft_timesheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timesheet_entries: {
+        Row: {
+          ai_confidence: number | null
+          ai_rationale: string | null
+          category: string
+          created_at: string
+          hours: number
+          id: string
+          project_id: string | null
+          timesheet_id: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_rationale?: string | null
+          category?: string
+          created_at?: string
+          hours?: number
+          id?: string
+          project_id?: string | null
+          timesheet_id: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_rationale?: string | null
+          category?: string
+          created_at?: string
+          hours?: number
+          id?: string
+          project_id?: string | null
+          timesheet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timesheet_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheet_entries_timesheet_id_fkey"
+            columns: ["timesheet_id"]
+            isOneToOne: false
+            referencedRelation: "draft_timesheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_sessions: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_user_roles: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_manager_of: { Args: { _employee: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "employee" | "manager" | "hr" | "executive" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +469,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["employee", "manager", "hr", "executive", "admin"],
+    },
   },
 } as const
