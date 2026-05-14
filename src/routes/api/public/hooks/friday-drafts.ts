@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/public/hooks/friday-drafts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const auth = request.headers.get("apikey") ?? request.headers.get("x-cron-secret") request.headers.get("x-hub-signature-256");
+        const auth = request.headers.get("apikey") ?? request.headers.get("x-cron-secret") ?? request.headers.get("x-hub-signature-256");
         const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
         if (!auth || (auth !== expected && auth !== process.env.ACTIVITY_INGEST_SECRET)) {
           return new Response("Unauthorized", { status: 401 });
