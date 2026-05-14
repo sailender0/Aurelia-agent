@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useRouter, useLocation } from "@tanstack
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LayoutDashboard, Users, Building2, BarChart3, LogOut, Calendar } from "lucide-react";
+import { LayoutDashboard, Users, Building2, BarChart3, LogOut, Calendar, Shield, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({ component: AuthLayout });
 
@@ -34,6 +34,8 @@ function AuthLayout() {
     { to: "/manager", label: "Team", icon: Users, show: hasAny(roles, ["manager", "admin"]) },
     { to: "/hr", label: "HR Console", icon: Building2, show: hasAny(roles, ["hr", "admin"]) },
     { to: "/exec", label: "Executive", icon: BarChart3, show: hasAny(roles, ["executive", "admin"]) },
+    { to: "/signals", label: "Activity Signals", icon: Activity, show: true },
+    { to: "/admin", label: "Admin", icon: Shield, show: hasAny(roles, ["admin"]) },
   ];
 
   return (
