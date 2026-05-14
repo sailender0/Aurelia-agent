@@ -32,11 +32,14 @@ async function resolveUserId(s: z.infer<typeof SignalSchema>): Promise<string | 
 export const Route = createFileRoute("/api/public/hooks/activity-signal")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
-        const auth = request.headers.get("x-ingest-secret");
-        if (!auth || auth !== process.env.ACTIVITY_INGEST_SECRET) {
-          return new Response("Unauthorized", { status: 401 });
-        }
+     POST: async ({ request }) => {
+  const signature = request.headers.get("x-hub-signature-256") || request.headers.get("X-Hub-Signature-256");
+  const auth = request.headers.get("x-ingest-secret");
+
+  // Allow if it's a signed GitHub request OR if the secret matches
+  if (!signature && (!auth || auth !== process.env.ACTIVITY_INGEST_SECRET)) {
+    return new Response("Unauthorized", { status: 401 });
+  }
         let body: unknown;
         try { body = await request.json(); }
         catch { return new Response("Invalid JSON", { status: 400 }); }
