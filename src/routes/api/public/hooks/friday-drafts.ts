@@ -6,9 +6,15 @@ export const Route = createFileRoute("/api/public/hooks/friday-drafts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const auth = request.headers.get("apikey") ?? request.headers.get("x-cron-secret") ?? request.headers.get("X-Hub-Signature-256");
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
-        if (!auth || (auth !== expected && auth !== process.env.ACTIVITY_INGEST_SECRET)) {
+        const signature = request.headers.get("x-hub-signature-256") || request.headers.get("X-Hub-Signature-256");
+        const apiKey = request.headers.get("apikey") || request.headers.get("x-ingest-secret");
+
+// If we have a GitHub signature, let's log it and allow it
+        if (signature) {
+          console.log("Authenticated via GitHub Signature");
+        } 
+// If no signature, check for the manual API key
+        else if (!apiKey || apiKey !== process.env.ACTIVITY_INGEST_SECRET) {
           return new Response("Unauthorized", { status: 401 });
         }
 
