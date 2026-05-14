@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, PlayCircle, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { mondayOf, fmtHours } from "@/lib/week";
+import { teamsNotifyMyEvent } from "@/lib/teams.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
 function Dashboard() {
   const { user, roles } = useAuth();
+  const notify = useServerFn(teamsNotifyMyEvent);
   const [active, setActive] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,6 +38,7 @@ function Dashboard() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Checked in");
+    notify({ data: { event: "check_in" } }).catch(() => {});
     void load();
   }
   async function checkOut() {
@@ -44,6 +48,7 @@ function Dashboard() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Checked out");
+    notify({ data: { event: "check_out" } }).catch(() => {});
     void load();
   }
 
