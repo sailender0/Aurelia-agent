@@ -46,22 +46,21 @@ export const Route = createFileRoute("/api/public/hooks/activity-signal")({
         if (eventType === "ping") {
           return Response.json({ message: "pong" }, { status: 200 });
         }
+
+        // 3. Parse Body
         let body: any;
-        try { 
-          body = await request.json(); 
-        } catch { 
-          return new Response("Invalid JSON", { status: 400 }); 
+        try {
+          body = await request.json();
+        } catch (e) {
+          return new Response("Invalid JSON", { status: 400 });
         }
-        
-        // --- NEW TRANSLATION BLOCK ---
-        const eventType = request.headers.get("x-github-event");
-        
+
+        // 4. GitHub Translation (The Adapter)
         if (eventType === "push") {
-          // Translate GitHub's payload into your SignalSchema format
           body = {
             source: "github",
             signal_type: "push",
-            external_user_id: body.sender?.login, // This will be "sailender0"
+            external_user_id: body.sender?.login,
             occurred_at: new Date().toISOString(),
             metadata: {
               repository: body.repository?.full_name,
@@ -69,18 +68,8 @@ export const Route = createFileRoute("/api/public/hooks/activity-signal")({
             }
           };
         }
-        // --- END TRANSLATION BLOCK ---
-        
-        const parsed = BodySchema.safeParse(body);
-        // 3. Parse Body
-        let body: unknown;
-        try {
-          body = await request.json();
-        } catch (e) {
-          return new Response("Invalid JSON", { status: 400 });
-        }
 
-        // 4. Validate & Process
+        // 5. Validation
         const parsed = BodySchema.safeParse(body);
         if (!parsed.success) {
           return Response.json({ error: parsed.error.flatten() }, { status: 400 });
