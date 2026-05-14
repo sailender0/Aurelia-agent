@@ -1,8 +1,10 @@
 import { createFileRoute, Outlet, Link, useRouter, useLocation } from "@tanstack/react-router";
+import { useState } from "react";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LayoutDashboard, Users, Building2, BarChart3, LogOut, Calendar, Shield, Activity, MessageSquare } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { LayoutDashboard, Users, Building2, BarChart3, LogOut, Calendar, Shield, Activity, MessageSquare, Menu } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({ component: AuthLayout });
 
