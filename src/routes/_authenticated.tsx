@@ -16,6 +16,7 @@ function AuthLayout() {
   const { user, loading, roles, signOut } = useAuth();
   const router = useRouter();
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loading) {
     return (
@@ -40,8 +41,6 @@ function AuthLayout() {
     { to: "/admin", label: "Admin", icon: Shield, show: hasAny(roles, ["admin"]) },
     { to: "/teams", label: "Teams Bot", icon: MessageSquare, show: hasAny(roles, ["admin"]) },
   ];
-
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = nav.filter((n) => n.show);
 
