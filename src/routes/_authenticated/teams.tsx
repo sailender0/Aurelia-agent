@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { teamsListChannels, teamsSaveChannel, teamsGetChannel, teamsTestPost } from "@/lib/teams.functions";
+import { teamsListChannels, teamsSaveChannel, teamsGetChannel, teamsTestPost, teamsListConnections, teamsTestAdaptiveCard } from "@/lib/teams.functions";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,22 +18,43 @@ function TeamsPage() {
   const save = useServerFn(teamsSaveChannel);
   const get = useServerFn(teamsGetChannel);
   const test = useServerFn(teamsTestPost);
+  const listConns = useServerFn(teamsListConnections);
+  const testCard = useServerFn(teamsTestAdaptiveCard);
 
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState("");
   const [channelId, setChannelId] = useState("");
   const [msg, setMsg] = useState("Hello from the Aurelia bot 👋");
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [conns, setConns] = useState<any[]>([]);
 
   async function load() {
     setLoading(true);
     try {
-      const [{ teams: t }, { config }] = await Promise.all([list(), get()]);
+      const [{ teams: t }, { config }, { connections }] = await Promise.all([list(), get(), listConns()]);
       setTeams(t);
+      setConns(connections);
       if (config?.teamId) setTeamId(config.teamId);
       if (config?.channelId) setChannelId(config.channelId);
     } catch (e: any) { toast.error(e.message); }
     setLoading(false);
+  }
+
+  async function onSync() {
+    setSyncing(true);
+    try {
+      const [{ teams: t }, { connections }] = await Promise.all([list(), listConns()]);
+      setTeams(t);
+      setConns(connections);
+      toast.success(`Synced ${t.length} team(s) · ${connections.length} bot install(s)`);
+    } catch (e: any) { toast.error(e.message); }
+    setSyncing(false);
+  }
+
+  async function onTestCard() {
+    try { await testCard(); toast.success("Adaptive check-in card posted"); }
+    catch (e: any) { toast.error(e.message); }
   }
   useEffect(() => { void load(); /* eslint-disable-next-line */ }, []);
 
@@ -75,12 +96,37 @@ function TeamsPage() {
               </Select>
             </div>
           )}
-          <Button onClick={onSave}>Save</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={onSave}>Save</Button>
+            <Button variant="outline" onClick={onSync} disabled={syncing}>
+              {syncing ? "Syncing…" : "Sync Teams channels"}
+            </Button>
+            <Button variant="secondary" onClick={onTestCard}>Test connection (Adaptive Card)</Button>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Send a test message</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Bot installations</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {conns.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No bot installs yet. Sideload the Teams app package (<code>teams-app/manifest.json</code>) and add the bot to a team —
+              the install handshake will register the team here automatically.
+            </p>
+          ) : conns.map((c) => (
+            <div key={c.id} className="rounded-md border border-border p-3 text-sm">
+              <div className="font-medium">{c.team_name}</div>
+              <div className="text-xs text-muted-foreground">
+                channel: {c.channel_id.slice(0, 24)}… · tenant: {c.tenant_id.slice(0, 8)}…
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Send a plain test message</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Input value={msg} onChange={(e) => setMsg(e.target.value)} />
           <Button variant="secondary" onClick={onTest}>Post test message</Button>

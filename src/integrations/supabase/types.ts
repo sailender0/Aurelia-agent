@@ -221,6 +221,45 @@ export type Database = {
           },
         ]
       }
+      teams_connections: {
+        Row: {
+          channel_id: string
+          created_at: string
+          id: string
+          installed_by: string | null
+          service_url: string
+          team_aad_id: string | null
+          team_internal_id: string
+          team_name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          id?: string
+          installed_by?: string | null
+          service_url: string
+          team_aad_id?: string | null
+          team_internal_id: string
+          team_name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          id?: string
+          installed_by?: string | null
+          service_url?: string
+          team_aad_id?: string | null
+          team_internal_id?: string
+          team_name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       timesheet_approvals: {
         Row: {
           comment: string | null

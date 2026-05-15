@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "REPLACE-WITH-YOUR-AZURE-BOT-APP-ID",
+  "packageName": "app.lovable.aurelia.attendance",
+  "developer": {
+    "name": "Aurelia",
+    "websiteUrl": "https://grace-work.lovable.app",
+    "privacyUrl": "https://grace-work.lovable.app/privacy",
+    "termsOfUseUrl": "https://grace-work.lovable.app/terms"
+  },
+  "name": {
+    "short": "Aurelia Attendance",
+    "full": "Aurelia Attendance Agent"
+  },
+  "description": {
+    "short": "Daily check-in & timesheet bot",
+    "full": "Posts daily check-in cards, captures attendance signals, and surfaces Friday timesheet drafts in Teams channels."
+  },
+  "icons": { "color": "color.png", "outline": "outline.png" },
+  "accentColor": "#4f46e5",
+  "bots": [
+    {
+      "botId": "REPLACE-WITH-YOUR-AZURE-BOT-APP-ID",
+      "scopes": ["team", "groupChat", "personal"],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["grace-work.lovable.app", "*.lovable.app"],
+  "webApplicationInfo": {
+    "id": "REPLACE-WITH-YOUR-AZURE-BOT-APP-ID",
+    "resource": "https://graph.microsoft.com",
+    "applicationPermissions": ["Channel.ReadBasic.All", "ChannelMessage.Send"]
+  }
+}
