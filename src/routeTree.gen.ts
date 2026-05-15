@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicHooksFridayDraftsRouteImport } from './routes/api/public/hooks/friday-drafts'
 import { Route as ApiPublicHooksActivitySignalRouteImport } from './routes/api/public/hooks/activity-signal'
+import { Route as ApiPublicBotMessagesRouteImport } from './routes/api/public/bot/messages'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -95,6 +96,11 @@ const ApiPublicHooksActivitySignalRoute =
     path: '/api/public/hooks/activity-signal',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBotMessagesRoute = ApiPublicBotMessagesRouteImport.update({
+  id: '/api/public/bot/messages',
+  path: '/api/public/bot/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/signals': typeof AuthenticatedSignalsRoute
   '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/bot/messages': typeof ApiPublicBotMessagesRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
 }
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/signals': typeof AuthenticatedSignalsRoute
   '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/bot/messages': typeof ApiPublicBotMessagesRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
 }
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/signals': typeof AuthenticatedSignalsRoute
   '/_authenticated/teams': typeof AuthenticatedTeamsRoute
   '/_authenticated/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/bot/messages': typeof ApiPublicBotMessagesRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
 }
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/teams'
     | '/timesheet'
+    | '/api/public/bot/messages'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
   fileRoutesByTo: FileRoutesByTo
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/teams'
     | '/timesheet'
+    | '/api/public/bot/messages'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
   id:
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/signals'
     | '/_authenticated/teams'
     | '/_authenticated/timesheet'
+    | '/api/public/bot/messages'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
   fileRoutesById: FileRoutesById
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicBotMessagesRoute: typeof ApiPublicBotMessagesRoute
   ApiPublicHooksActivitySignalRoute: typeof ApiPublicHooksActivitySignalRoute
   ApiPublicHooksFridayDraftsRoute: typeof ApiPublicHooksFridayDraftsRoute
 }
@@ -301,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksActivitySignalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bot/messages': {
+      id: '/api/public/bot/messages'
+      path: '/api/public/bot/messages'
+      fullPath: '/api/public/bot/messages'
+      preLoaderRoute: typeof ApiPublicBotMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -335,6 +355,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiPublicBotMessagesRoute: ApiPublicBotMessagesRoute,
   ApiPublicHooksActivitySignalRoute: ApiPublicHooksActivitySignalRoute,
   ApiPublicHooksFridayDraftsRoute: ApiPublicHooksFridayDraftsRoute,
 }
