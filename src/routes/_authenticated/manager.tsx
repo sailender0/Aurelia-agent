@@ -36,7 +36,7 @@ function ManagerPage() {
       // 2. Fetch timesheets strictly with 'submitted' status for those reports
       const { data: ts } = await supabase
         .from("draft_timesheets")
-        .select("*, profiles!inner(display_name)")
+        .select("*, profiles(display_name)")
         .in("user_id", ids)
         .eq("status", "submitted");
       
