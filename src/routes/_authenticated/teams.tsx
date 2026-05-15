@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { teamsListChannels, teamsSaveChannel, teamsGetChannel, teamsTestPost } from "@/lib/teams.functions";
+import { teamsListChannels, teamsSaveChannel, teamsGetChannel, teamsTestPost, teamsListConnections, teamsTestAdaptiveCard } from "@/lib/teams.functions";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,22 +18,43 @@ function TeamsPage() {
   const save = useServerFn(teamsSaveChannel);
   const get = useServerFn(teamsGetChannel);
   const test = useServerFn(teamsTestPost);
+  const listConns = useServerFn(teamsListConnections);
+  const testCard = useServerFn(teamsTestAdaptiveCard);
 
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState("");
   const [channelId, setChannelId] = useState("");
   const [msg, setMsg] = useState("Hello from the Aurelia bot 👋");
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [conns, setConns] = useState<any[]>([]);
 
   async function load() {
     setLoading(true);
     try {
-      const [{ teams: t }, { config }] = await Promise.all([list(), get()]);
+      const [{ teams: t }, { config }, { connections }] = await Promise.all([list(), get(), listConns()]);
       setTeams(t);
+      setConns(connections);
       if (config?.teamId) setTeamId(config.teamId);
       if (config?.channelId) setChannelId(config.channelId);
     } catch (e: any) { toast.error(e.message); }
     setLoading(false);
+  }
+
+  async function onSync() {
+    setSyncing(true);
+    try {
+      const [{ teams: t }, { connections }] = await Promise.all([list(), listConns()]);
+      setTeams(t);
+      setConns(connections);
+      toast.success(`Synced ${t.length} team(s) · ${connections.length} bot install(s)`);
+    } catch (e: any) { toast.error(e.message); }
+    setSyncing(false);
+  }
+
+  async function onTestCard() {
+    try { await testCard(); toast.success("Adaptive check-in card posted"); }
+    catch (e: any) { toast.error(e.message); }
   }
   useEffect(() => { void load(); /* eslint-disable-next-line */ }, []);
 
