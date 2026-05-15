@@ -30,7 +30,6 @@ export const Route = createFileRoute("/api/public/hooks/friday-drafts")({
           }
         }
         return Response.json({ weekStart, processed: results.length, results });
-        return Response.json({ message: "Handshake Successful", receivedSignature: !!signature, weekStart});
       },
     },
   },
