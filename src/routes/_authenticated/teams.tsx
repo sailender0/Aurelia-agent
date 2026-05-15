@@ -96,12 +96,37 @@ function TeamsPage() {
               </Select>
             </div>
           )}
-          <Button onClick={onSave}>Save</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={onSave}>Save</Button>
+            <Button variant="outline" onClick={onSync} disabled={syncing}>
+              {syncing ? "Syncing…" : "Sync Teams channels"}
+            </Button>
+            <Button variant="secondary" onClick={onTestCard}>Test connection (Adaptive Card)</Button>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Send a test message</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Bot installations</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {conns.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No bot installs yet. Sideload the Teams app package (<code>teams-app/manifest.json</code>) and add the bot to a team —
+              the install handshake will register the team here automatically.
+            </p>
+          ) : conns.map((c) => (
+            <div key={c.id} className="rounded-md border border-border p-3 text-sm">
+              <div className="font-medium">{c.team_name}</div>
+              <div className="text-xs text-muted-foreground">
+                channel: {c.channel_id.slice(0, 24)}… · tenant: {c.tenant_id.slice(0, 8)}…
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Send a plain test message</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Input value={msg} onChange={(e) => setMsg(e.target.value)} />
           <Button variant="secondary" onClick={onTest}>Post test message</Button>
