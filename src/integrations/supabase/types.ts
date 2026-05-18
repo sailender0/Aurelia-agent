@@ -68,6 +68,77 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_events: {
+        Row: {
+          event_type: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          session_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          session_id?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          session_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_sessions: {
+        Row: {
+          check_in_time: string
+          check_out_time: string | null
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          check_in_time: string
+          check_out_time?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          check_in_time?: string
+          check_out_time?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string
@@ -130,6 +201,77 @@ export type Database = {
           },
         ]
       }
+      holiday_calendars: {
+        Row: {
+          country_code: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      holidays: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          holiday_date: string
+          id: string
+          is_full_day: boolean
+          name: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          holiday_date: string
+          id?: string
+          is_full_day?: boolean
+          name: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          holiday_date?: string
+          id?: string
+          is_full_day?: boolean
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holidays_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+        }
+        Relationships: []
+      }
       identity_mappings: {
         Row: {
           external_id: string
@@ -151,37 +293,93 @@ export type Database = {
         }
         Relationships: []
       }
+      outbox_events: {
+        Row: {
+          attempts: number
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          payload: Json
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          calendar_id: string | null
           created_at: string
           display_name: string
           email: string
           employment_type: string
           id: string
           manager_id: string | null
+          timezone_preference: string
+          work_hours_id: string | null
         }
         Insert: {
+          calendar_id?: string | null
           created_at?: string
           display_name: string
           email: string
           employment_type?: string
           id: string
           manager_id?: string | null
+          timezone_preference?: string
+          work_hours_id?: string | null
         }
         Update: {
+          calendar_id?: string | null
           created_at?: string
           display_name?: string
           email?: string
           employment_type?: string
           id?: string
           manager_id?: string | null
+          timezone_preference?: string
+          work_hours_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_calendars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_manager_id_fkey"
             columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_work_hours_id_fkey"
+            columns: ["work_hours_id"]
+            isOneToOne: false
+            referencedRelation: "user_work_hours"
             referencedColumns: ["id"]
           },
         ]
@@ -361,6 +559,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_work_hours: {
+        Row: {
+          created_at: string
+          end_time: string
+          grace_window_minutes: number
+          id: string
+          name: string
+          start_time: string
+          working_days: number[]
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string
+          grace_window_minutes?: number
+          id?: string
+          name: string
+          start_time?: string
+          working_days?: number[]
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          grace_window_minutes?: number
+          id?: string
+          name?: string
+          start_time?: string
+          working_days?: number[]
+        }
+        Relationships: []
+      }
       work_sessions: {
         Row: {
           check_in: string
@@ -405,6 +633,17 @@ export type Database = {
         Returns: boolean
       }
       is_manager_of: { Args: { _employee: string }; Returns: boolean }
+      record_attendance_action: {
+        Args: {
+          p_action: string
+          p_idempotency_key: string
+          p_metadata?: Json
+          p_occurred_at?: string
+          p_source?: string
+          p_work_date: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "employee" | "manager" | "hr" | "executive" | "admin"
