@@ -2,18 +2,18 @@
  * modules/attendance — orchestrates check-in / check-out.
  *
  * Boundary rules:
- *   - Only this module talks to attendance_sessions / attendance_events / outbox_events.
- *   - It composes the Timezone and Calendar modules; it does NOT inline their logic.
- *   - The DB-side `record_attendance_action` SQL function performs the atomic
- *     transaction (idempotency + session + event + outbox). This file is the
- *     server-side gateway that loads context (work hours, holidays, timezone),
- *     enforces business rules, and then calls the RPC.
+ * - Only this module talks to attendance_sessions / attendance_events / outbox_events.
+ * - It composes the Timezone and Calendar modules; it does NOT inline their logic.
+ * - The DB-side `record_attendance_action` SQL function performs the atomic
+ * transaction (idempotency + session + event + outbox). This file is the
+ * server-side gateway that loads context (work hours, holidays, timezone),
+ * enforces business rules, and then calls the RPC.
  *
  * Server-only — imports the admin client. Do NOT import from browser code.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  workDateInZone,
+  calculateBusinessWorkDate,
   minutesOfDayInZone,
   isValidTimezone,
 } from "../timezone";
@@ -91,10 +91,6 @@ async function loadUserContext(userId: string): Promise<UserContext> {
 /**
  * Core entrypoint. Validates business rules, then delegates the atomic write
  * (idempotency + session + event + outbox) to the SQL function.
- *
- * Throws Error with stable codes: 'unauthenticated', 'invalid_timezone',
- * 'not_a_working_day', 'outside_work_window', 'already_checked_in',
- * 'no_open_session', 'duplicate' (returned, not thrown).
  */
 export async function recordAttendance(cmd: AttendanceCommand): Promise<AttendanceResult> {
   if (!cmd.userId) throw new Error("unauthenticated");
@@ -104,9 +100,11 @@ export async function recordAttendance(cmd: AttendanceCommand): Promise<Attendan
 
   const ctx = await loadUserContext(cmd.userId);
   const occurredAt = cmd.occurredAt ?? new Date();
-  const workDate = workDateInZone(occurredAt, ctx.timezone);
+  
+  // FIXED: Swapped to calculateBusinessWorkDate to handle midnight-crossing boundaries safely.
+  const workDate = calculateBusinessWorkDate(occurredAt, ctx.timezone);
 
-  // Business rules (only on check-in; check-out is always allowed if a session is open)
+  // Business rules (only checked on check-in; check-out is always allowed if an open session exists)
   if (cmd.action === "check_in") {
     const cls = classifyDay(workDate, ctx.workHours, ctx.holidays);
     if (cls.kind !== "working") {
@@ -117,14 +115,25 @@ export async function recordAttendance(cmd: AttendanceCommand): Promise<Attendan
     }
   }
 
-  // Atomic write happens here. The RPC enforces idempotency + outbox in one tx.
-  const { data, error } = await supabaseAdmin.rpc("record_attendance_action" as any, {
+  // Prepare full outbox payload to preserve audit traces downstream
+  const outboxPayload = {
+    user_id: cmd.userId,
+    action_type: cmd.action,
+    work_date: workDate,
+    occurred_at: occurredAt.toISOString(),
+    source: cmd.source ?? "web"
+  };
+
+  // Atomic write happens here via the database transaction engine.
+  const { data, error } = await supabaseAdmin.rpc("record_attendance_action", {
+    p_user_id: cmd.userId,
     p_action: cmd.action,
     p_idempotency_key: cmd.idempotencyKey,
     p_work_date: workDate,
     p_occurred_at: occurredAt.toISOString(),
     p_source: cmd.source ?? "web",
     p_metadata: cmd.metadata ?? {},
+    p_outbox_payload: outboxPayload
   });
   if (error) throw new Error(error.message);
 
@@ -135,6 +144,7 @@ export async function recordAttendance(cmd: AttendanceCommand): Promise<Attendan
     event_id?: string;
     status?: "open" | "closed" | "void";
   };
+
   return {
     ok: r.ok,
     duplicate: r.duplicate,
