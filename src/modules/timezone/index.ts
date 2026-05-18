@@ -51,3 +51,30 @@ export function isValidTimezone(tz: string): boolean {
   try { new Intl.DateTimeFormat("en-US", { timeZone: tz }); return true; }
   catch { return false; }
 }
+
+/**
+ * Advanced Deducer: Evaluates if a midnight-crossing checkout belongs to the previous business day.
+ * If the wall-clock time falls before a cutoff hour (e.g., 4:00 AM), it safely rolls back the business date.
+ */
+export function calculateBusinessWorkDate(
+  instant: Date,
+  timezone: string,
+  cutoffHour: number = 4
+): string {
+  const localWallTime = wallTimeInZone(instant, timezone);
+  const [hour] = localWallTime.split(":").map(Number);
+  const rawDateStr = workDateInZone(instant, timezone);
+
+  if (hour < cutoffHour) {
+    // Construct a safe intermediate date string and step backwards by one full day
+    const parsedDate = new Date(`${rawDateStr}T12:00:00Z`);
+    parsedDate.setUTCDate(parsedDate.getUTCDate() - 1);
+    
+    const y = parsedDate.getUTCFullYear();
+    const m = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(parsedDate.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  return rawDateStr;
+}
