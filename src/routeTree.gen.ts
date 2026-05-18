@@ -21,9 +21,11 @@ import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
 import { Route as AuthenticatedExecRouteImport } from './routes/_authenticated/exec'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicHooksOutboxDrainRouteImport } from './routes/api/public/hooks/outbox-drain'
 import { Route as ApiPublicHooksFridayDraftsRouteImport } from './routes/api/public/hooks/friday-drafts'
 import { Route as ApiPublicHooksActivitySignalRouteImport } from './routes/api/public/hooks/activity-signal'
 import { Route as ApiPublicBotMessagesRouteImport } from './routes/api/public/bot/messages'
+import { Route as ApiPublicAttendanceCheckInRouteImport } from './routes/api/public/attendance/check-in'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -84,6 +86,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksOutboxDrainRoute =
+  ApiPublicHooksOutboxDrainRouteImport.update({
+    id: '/api/public/hooks/outbox-drain',
+    path: '/api/public/hooks/outbox-drain',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksFridayDraftsRoute =
   ApiPublicHooksFridayDraftsRouteImport.update({
     id: '/api/public/hooks/friday-drafts',
@@ -101,6 +109,12 @@ const ApiPublicBotMessagesRoute = ApiPublicBotMessagesRouteImport.update({
   path: '/api/public/bot/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAttendanceCheckInRoute =
+  ApiPublicAttendanceCheckInRouteImport.update({
+    id: '/api/public/attendance/check-in',
+    path: '/api/public/attendance/check-in',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -114,9 +128,11 @@ export interface FileRoutesByFullPath {
   '/signals': typeof AuthenticatedSignalsRoute
   '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/attendance/check-in': typeof ApiPublicAttendanceCheckInRoute
   '/api/public/bot/messages': typeof ApiPublicBotMessagesRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
+  '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,9 +146,11 @@ export interface FileRoutesByTo {
   '/signals': typeof AuthenticatedSignalsRoute
   '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/attendance/check-in': typeof ApiPublicAttendanceCheckInRoute
   '/api/public/bot/messages': typeof ApiPublicBotMessagesRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
+  '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -148,9 +166,11 @@ export interface FileRoutesById {
   '/_authenticated/signals': typeof AuthenticatedSignalsRoute
   '/_authenticated/teams': typeof AuthenticatedTeamsRoute
   '/_authenticated/timesheet': typeof AuthenticatedTimesheetRoute
+  '/api/public/attendance/check-in': typeof ApiPublicAttendanceCheckInRoute
   '/api/public/bot/messages': typeof ApiPublicBotMessagesRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
+  '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -166,9 +186,11 @@ export interface FileRouteTypes {
     | '/signals'
     | '/teams'
     | '/timesheet'
+    | '/api/public/attendance/check-in'
     | '/api/public/bot/messages'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
+    | '/api/public/hooks/outbox-drain'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -182,9 +204,11 @@ export interface FileRouteTypes {
     | '/signals'
     | '/teams'
     | '/timesheet'
+    | '/api/public/attendance/check-in'
     | '/api/public/bot/messages'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
+    | '/api/public/hooks/outbox-drain'
   id:
     | '__root__'
     | '/'
@@ -199,9 +223,11 @@ export interface FileRouteTypes {
     | '/_authenticated/signals'
     | '/_authenticated/teams'
     | '/_authenticated/timesheet'
+    | '/api/public/attendance/check-in'
     | '/api/public/bot/messages'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
+    | '/api/public/hooks/outbox-drain'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -209,9 +235,11 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicAttendanceCheckInRoute: typeof ApiPublicAttendanceCheckInRoute
   ApiPublicBotMessagesRoute: typeof ApiPublicBotMessagesRoute
   ApiPublicHooksActivitySignalRoute: typeof ApiPublicHooksActivitySignalRoute
   ApiPublicHooksFridayDraftsRoute: typeof ApiPublicHooksFridayDraftsRoute
+  ApiPublicHooksOutboxDrainRoute: typeof ApiPublicHooksOutboxDrainRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -300,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/outbox-drain': {
+      id: '/api/public/hooks/outbox-drain'
+      path: '/api/public/hooks/outbox-drain'
+      fullPath: '/api/public/hooks/outbox-drain'
+      preLoaderRoute: typeof ApiPublicHooksOutboxDrainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/friday-drafts': {
       id: '/api/public/hooks/friday-drafts'
       path: '/api/public/hooks/friday-drafts'
@@ -319,6 +354,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/bot/messages'
       fullPath: '/api/public/bot/messages'
       preLoaderRoute: typeof ApiPublicBotMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/attendance/check-in': {
+      id: '/api/public/attendance/check-in'
+      path: '/api/public/attendance/check-in'
+      fullPath: '/api/public/attendance/check-in'
+      preLoaderRoute: typeof ApiPublicAttendanceCheckInRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -355,10 +397,22 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiPublicAttendanceCheckInRoute: ApiPublicAttendanceCheckInRoute,
   ApiPublicBotMessagesRoute: ApiPublicBotMessagesRoute,
   ApiPublicHooksActivitySignalRoute: ApiPublicHooksActivitySignalRoute,
   ApiPublicHooksFridayDraftsRoute: ApiPublicHooksFridayDraftsRoute,
+  ApiPublicHooksOutboxDrainRoute: ApiPublicHooksOutboxDrainRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
