@@ -38,49 +38,28 @@ export const Route = createFileRoute("/api/public/hooks/outbox-drain")({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        // 1. Claim a batch atomically. Use a CTE so concurrent drainers don't double-claim.
-        const claimSql = `
-          with picked as (
-            select id from public.outbox_events
-            where status = 'pending'
-            order by created_at
-            limit ${MAX_BATCH}
-            for update skip locked
-          )
-          update public.outbox_events o
-             set status = 'processing'
-            from picked
-           where o.id = picked.id
-          returning o.id, o.event_type, o.payload, o.attempts
-        `;
-        const { data: claimed, error: claimErr } = await supabaseAdmin.rpc("exec_sql_select", {
-          q: claimSql,
-        });
-
-        // Fallback: most projects don't have an exec_sql_select RPC. Use a portable claim instead.
+        // 1. Claim a batch. Two-step claim (select pending → update to 'processing'
+        //    filtered by status='pending') prevents double-dispatch across concurrent
+        //    drainers: the second UPDATE filter will skip any row another worker grabbed.
         let rows: OutboxRow[] = [];
-        if (claimErr || !claimed) {
-          const { data: pending, error: selErr } = await supabaseAdmin
-            .from("outbox_events")
-            .select("id, event_type, payload, attempts")
-            .eq("status", "pending")
-            .order("created_at", { ascending: true })
-            .limit(MAX_BATCH);
-          if (selErr) return Response.json({ error: selErr.message }, { status: 500 });
+        const { data: pending, error: selErr } = await supabaseAdmin
+          .from("outbox_events")
+          .select("id")
+          .eq("status", "pending")
+          .order("created_at", { ascending: true })
+          .limit(MAX_BATCH);
+        if (selErr) return Response.json({ error: selErr.message }, { status: 500 });
 
-          if (pending && pending.length > 0) {
-            const ids = pending.map((r) => r.id);
-            const { data: locked, error: upErr } = await supabaseAdmin
-              .from("outbox_events")
-              .update({ status: "processing" })
-              .in("id", ids)
-              .eq("status", "pending")
-              .select("id, event_type, payload, attempts");
-            if (upErr) return Response.json({ error: upErr.message }, { status: 500 });
-            rows = (locked ?? []) as OutboxRow[];
-          }
-        } else {
-          rows = claimed as OutboxRow[];
+        if (pending && pending.length > 0) {
+          const ids = pending.map((r) => r.id);
+          const { data: locked, error: upErr } = await supabaseAdmin
+            .from("outbox_events")
+            .update({ status: "processing" })
+            .in("id", ids)
+            .eq("status", "pending")
+            .select("id, event_type, payload, attempts");
+          if (upErr) return Response.json({ error: upErr.message }, { status: 500 });
+          rows = ((locked ?? []) as unknown) as OutboxRow[];
         }
 
         // 2-4. Dispatch each, then update final status.
