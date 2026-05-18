@@ -132,8 +132,8 @@ export async function recordAttendance(cmd: AttendanceCommand): Promise<Attendan
     p_work_date: workDate,
     p_occurred_at: occurredAt.toISOString(),
     p_source: cmd.source ?? "web",
-    p_metadata: cmd.metadata ?? {},
-    p_outbox_payload: outboxPayload
+    p_metadata: (cmd.metadata ?? {}) as never,
+    p_outbox_payload: outboxPayload as never
   });
   if (error) throw new Error(error.message);
 

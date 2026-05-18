@@ -633,17 +633,31 @@ export type Database = {
         Returns: boolean
       }
       is_manager_of: { Args: { _employee: string }; Returns: boolean }
-      record_attendance_action: {
-        Args: {
-          p_action: string
-          p_idempotency_key: string
-          p_metadata?: Json
-          p_occurred_at?: string
-          p_source?: string
-          p_work_date: string
-        }
-        Returns: Json
-      }
+      record_attendance_action:
+        | {
+            Args: {
+              p_action: string
+              p_idempotency_key: string
+              p_metadata?: Json
+              p_occurred_at?: string
+              p_source?: string
+              p_work_date: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_action: string
+              p_idempotency_key: string
+              p_metadata: Json
+              p_occurred_at: string
+              p_outbox_payload: Json
+              p_source: string
+              p_user_id: string
+              p_work_date: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       app_role: "employee" | "manager" | "hr" | "executive" | "admin"
