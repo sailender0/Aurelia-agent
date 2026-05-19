@@ -94,64 +94,6 @@ export const teamsNotifyMyEvent = createServerFn({ method: "POST" })
     return await postToTeams(`<b>${who}</b> ${labels[data.event]}${data.detail ? ` — ${data.detail}` : ""}`);
   });
 
-// ---- Bot install registry & Adaptive Card test ----
+// Bot Framework install registry and Adaptive Card test were removed.
+// Channel sync is delegated-Graph-only via teamsListChannels / teamsSaveChannel.
 
-export const teamsListConnections = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
-    const { data, error } = await supabaseAdmin
-      .from("teams_connections")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return { connections: data ?? [] };
-  });
-
-const CHECKIN_CARD = {
-  type: "AdaptiveCard",
-  $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
-  version: "1.4",
-  body: [
-    { type: "TextBlock", size: "Large", weight: "Bolder", text: "Aurelia · Daily check-in" },
-    { type: "TextBlock", wrap: true, text: "Tap below to mark yourself checked in for today." },
-  ],
-  actions: [
-    { type: "Action.Submit", title: "Check in", data: { action: "check_in" } },
-    { type: "Action.OpenUrl", title: "Open dashboard", url: "https://grace-work.lovable.app/dashboard" },
-  ],
-};
-
-export const teamsTestAdaptiveCard = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
-    const { data: setting } = await supabaseAdmin
-      .from("app_settings").select("value").eq("key", "teams_channel").maybeSingle();
-    const cfg = (setting?.value ?? {}) as { teamId?: string; channelId?: string };
-    if (!cfg.teamId || !cfg.channelId) throw new Error("Pick a Teams channel first.");
-
-    const res = await fetch(
-      `${GATEWAY}/teams/${cfg.teamId}/channels/${cfg.channelId}/messages`,
-      {
-        method: "POST",
-        headers: teamsHeaders(),
-        body: JSON.stringify({
-          body: { contentType: "html", content: "<attachment id=\"1\"></attachment>" },
-          attachments: [{
-            id: "1",
-            contentType: "application/vnd.microsoft.card.adaptive",
-            contentUrl: null,
-            content: JSON.stringify(CHECKIN_CARD),
-            name: null,
-            thumbnailUrl: null,
-          }],
-        }),
-      }
-    );
-    if (!res.ok) {
-      const t = await res.text();
-      throw new Error(`Adaptive Card post failed [${res.status}]: ${t.slice(0, 200)}`);
-    }
-    return { ok: true };
-  });
