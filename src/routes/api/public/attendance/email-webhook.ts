@@ -39,30 +39,23 @@ function json(body: unknown, status = 200) {
   });
 }
 
-/** * Bulletproof text cleaner: converts any messy HTML string 
- * into clear, easily sliceable plain text lines.
- */
 function cleanHtmlToText(html: string): string {
   if (!html) return "";
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<p[^>]*>/gi, "\n")       // <p> or <p class="..."> -> newline
+    .replace(/<p[^>]*>/gi, "\n")
     .replace(/<\/p>/gi, "\n")
-    .replace(/<br\s*\/?>/gi, "\n")      // <br> or <br/> -> newline
-    .replace(/<[^>]+>/g, " ")          // Strip remaining random HTML elements
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">");
 }
 
-/** * Robust key-value finder: Extracts keys even if lines 
- * are mashed together or split by spaces/newlines.
- */
 function extractField(text: string, keyName: string): string | null {
-  // Matches "keyname: value" across any hidden tags or spacing anomalies
-  const regex = new RegExp(`${keyName}\\s*:\\s*([^\\n\\r<>]+)`, "i");
+  const regex = new RegExp(`${keyName}\\s*:\\s*([^\\n\\r\\s<>]+)`, "i");
   const match = regex.exec(text);
   return match ? match[1].trim() : null;
 }
@@ -87,7 +80,6 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
           return json({ error: "server_not_configured" }, 500);
         }
 
-        // 1. Read raw request text to protect against parsing dropouts
         let rawBody = "";
         try {
           rawBody = await request.text();
@@ -95,7 +87,6 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
           return json({ error: "failed_to_read_request_stream" }, 400);
         }
 
-        // 2. Parse payload JSON safely
         let payload: any;
         try {
           payload = JSON.parse(rawBody);
@@ -103,24 +94,23 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
           return json({ error: "invalid_json_payload" }, 400);
         }
 
-        // 3. Scan the entire payload object for text or html strings recursively
         const dataContext = payload?.data || payload;
-        const rawHtmlSource = dataContext?.html || dataContext?.text || "";
         
-        // Clean up the text parameters
+        // 🔄 COMBINE BOTH SOURCES: Look inside the email text body AND the subject line!
+        const rawHtmlSource = dataContext?.html || dataContext?.text || "";
+        const subjectSource = dataContext?.subject || "";
+        
         const cleanContent = cleanHtmlToText(typeof rawHtmlSource === "string" ? rawHtmlSource : JSON.stringify(rawHtmlSource));
+        
+        // Merge them together so extractField scans both areas
+        const finalSearchText = `${subjectSource}\n${cleanContent}\n${rawBody}`;
 
-        // Fallback: If nothing was pulled, scan the raw unparsed JSON string layout
-        const finalSearchText = cleanContent.trim().length > 0 ? cleanContent : cleanHtmlToText(rawBody);
-
-        // 4. Extract fields cleanly using regex lookups
         const secret = extractField(finalSearchText, "secret");
         const email = extractField(finalSearchText, "email");
         let type = extractField(finalSearchText, "type");
 
-        // Fail early if text extraction completely missed the core values
         if (!secret || !email || !type) {
-          console.error("[email-webhook] Parsing failed. Processed Text Context:", finalSearchText);
+          console.error("[email-webhook] Parsing failed. Searched Scope:", finalSearchText);
           return json({ 
             error: "empty_email_body", 
             diagnostics: {
@@ -130,14 +120,12 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
           }, 400);
         }
 
-        // 5. Authenticate Webhook Secret
         const headerSecret = request.headers.get("x-webhook-secret") ?? "";
         const providedSecret = headerSecret || secret;
         if (!safeEqual(providedSecret, expectedSecret)) {
           return json({ error: "unauthorized" }, 401);
         }
 
-        // 6. Normalize and sanitize inputs
         const normalizedEmail = email.toLowerCase();
         let normalizedType = type.toLowerCase().replace(/\s+/g, "_");
 
@@ -160,7 +148,6 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
 
         const occurredAt = new Date();
 
-        // 7. Core Database Execution Pipeline
         const { data: profile, error: profErr } = await supabaseAdmin
           .from("profiles")
           .select("id")
@@ -185,7 +172,7 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
             source: "email_webhook",
             metadata: {
               email: normalizedEmail,
-              subject: payload?.data?.subject || "Teams Hook Ingest",
+              subject: subjectSource,
               ingested_at: occurredAt.toISOString(),
             },
           });
