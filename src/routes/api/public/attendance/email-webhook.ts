@@ -32,18 +32,6 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { recordAttendance } from "@/modules/attendance";
 
-const ResendEnvelope = z.object({
-  type: z.string().optional(),
-  data: z
-    .object({
-      text: z.string().optional(),
-      html: z.string().optional(),
-      subject: z.string().optional(),
-      from: z.union([z.string(), z.object({}).passthrough()]).optional(),
-    })
-    .passthrough(),
-});
-
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -51,37 +39,32 @@ function json(body: unknown, status = 200) {
   });
 }
 
-/** Robust HTML stripper that ensures clean line breaks between block elements */
-function htmlToText(html: string): string {
+/** * Bulletproof text cleaner: converts any messy HTML string 
+ * into clear, easily sliceable plain text lines.
+ */
+function cleanHtmlToText(html: string): string {
+  if (!html) return "";
   return html
-   .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<p[^>]*>/gi, "\n")       // Captures <p class="editor-paragraph"> and turns it into a newline
+    .replace(/<p[^>]*>/gi, "\n")       // <p> or <p class="..."> -> newline
     .replace(/<\/p>/gi, "\n")
-    .replace(/<br[^>]*>/gi, "\n")      // Captures <br>, <br/>, or <br class="..."> and turns it into a newline
-    .replace(/<[^>]+>/g, " ")          // Strips any remaining random tags safely
+    .replace(/<br\s*\/?>/gi, "\n")      // <br> or <br/> -> newline
+    .replace(/<[^>]+>/g, " ")          // Strip remaining random HTML elements
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/\n\s*\n/g, "\n");
+    .replace(/&gt;/gi, ">");
 }
 
-/** Parse "key: value" lines even if they are mashed together inside dirty HTML text strings */
-function parseKeyedLines(body: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  // Normalize spacing and split by line breaks
-  for (const rawLine of body.split(/\r?\n/)) {
-    const line = rawLine.replace(/^[>|\s]+/, "").trim();
-    if (!line) continue;
-    
-    const m = /^([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*(.+)$/.exec(line);
-    if (!m) continue;
-    
-    const key = m[1].toLowerCase().trim();
-    if (!(key in out)) out[key] = m[2].trim();
-  }
-  return out;
+/** * Robust key-value finder: Extracts keys even if lines 
+ * are mashed together or split by spaces/newlines.
+ */
+function extractField(text: string, keyName: string): string | null {
+  // Matches "keyname: value" across any hidden tags or spacing anomalies
+  const regex = new RegExp(`${keyName}\\s*:\\s*([^\\n\\r<>]+)`, "i");
+  const match = regex.exec(text);
+  return match ? match[1].trim() : null;
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -98,74 +81,90 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
         const expectedSecret =
           process.env.ATTENDANCE_INGEST_SECRET ??
           process.env.ACTIVITY_INGEST_SECRET;
+          
         if (!expectedSecret) {
           console.error("[email-webhook] no ingest secret configured");
           return json({ error: "server_not_configured" }, 500);
         }
 
-        let raw: unknown;
+        // 1. Read raw request text to protect against parsing dropouts
+        let rawBody = "";
         try {
-          raw = await request.json();
+          rawBody = await request.text();
+        } catch (err) {
+          return json({ error: "failed_to_read_request_stream" }, 400);
+        }
+
+        // 2. Parse payload JSON safely
+        let payload: any;
+        try {
+          payload = JSON.parse(rawBody);
         } catch {
-          return json({ error: "invalid_json" }, 400);
+          return json({ error: "invalid_json_payload" }, 400);
         }
+
+        // 3. Scan the entire payload object for text or html strings recursively
+        const dataContext = payload?.data || payload;
+        const rawHtmlSource = dataContext?.html || dataContext?.text || "";
         
-        const parsed = ResendEnvelope.safeParse(raw);
-        if (!parsed.success) {
-          return json({ error: "invalid_payload" }, 400);
+        // Clean up the text parameters
+        const cleanContent = cleanHtmlToText(typeof rawHtmlSource === "string" ? rawHtmlSource : JSON.stringify(rawHtmlSource));
+
+        // Fallback: If nothing was pulled, scan the raw unparsed JSON string layout
+        const finalSearchText = cleanContent.trim().length > 0 ? cleanContent : cleanHtmlToText(rawBody);
+
+        // 4. Extract fields cleanly using regex lookups
+        const secret = extractField(finalSearchText, "secret");
+        const email = extractField(finalSearchText, "email");
+        let type = extractField(finalSearchText, "type");
+
+        // Fail early if text extraction completely missed the core values
+        if (!secret || !email || !type) {
+          console.error("[email-webhook] Parsing failed. Processed Text Context:", finalSearchText);
+          return json({ 
+            error: "empty_email_body", 
+            diagnostics: {
+              scannedText: finalSearchText,
+              extracted: { secret: !!secret, email: !!email, type: !!type }
+            }
+          }, 400);
         }
-        const { data } = parsed.data;
 
-        // Extract and clean raw body text profile
-        let bodyText = data.text ?? "";
-        if (data.html) {
-          // Process the HTML to ensure lines don't mash together
-          bodyText = htmlToText(data.html) + "\n" + bodyText;
-        }
-
-        if (!bodyText.trim()) {
-          return json({ error: "empty_email_body" }, 400);
-        }
-
-        const fields = parseKeyedLines(bodyText);
-
-        // Security Check
+        // 5. Authenticate Webhook Secret
         const headerSecret = request.headers.get("x-webhook-secret") ?? "";
-        const bodySecret = fields.secret ?? "";
-        const provided = headerSecret || bodySecret;
-        if (!provided || !safeEqual(provided, expectedSecret)) {
+        const providedSecret = headerSecret || secret;
+        if (!safeEqual(providedSecret, expectedSecret)) {
           return json({ error: "unauthorized" }, 401);
         }
 
-        // Extract input fields safely
-        const email = (fields.email ?? "").toLowerCase();
-        let rawType = (fields.type ?? "").toLowerCase().replace(/\s+/g, "_");
+        // 6. Normalize and sanitize inputs
+        const normalizedEmail = email.toLowerCase();
+        let normalizedType = type.toLowerCase().replace(/\s+/g, "_");
 
-        // 🔄 NEW TRANSLATION LAYER: Map messy Power Automate strings to Zod Enums
-        if (rawType === "clock_in" || rawType === "check_in") rawType = "check_in";
-        if (rawType === "clock_out" || rawType === "check_out") rawType = "check_out";
+        if (normalizedType === "clock_in" || normalizedType === "check_in") normalizedType = "check_in";
+        if (normalizedType === "clock_out" || normalizedType === "check_out") normalizedType = "check_out";
 
         const FieldsSchema = z.object({
           email: z.string().email().max(255),
           type: z.enum(["check_in", "check_out"]),
         });
 
-        const fieldCheck = FieldsSchema.safeParse({ email, type: rawType });
+        const fieldCheck = FieldsSchema.safeParse({ email: normalizedEmail, type: normalizedType });
         if (!fieldCheck.success) {
           return json({ 
             error: "missing_or_invalid_fields", 
             details: fieldCheck.error.flatten(),
-            parsedFound: { email, type: rawType } 
+            parsed: { email: normalizedEmail, type: normalizedType }
           }, 400);
         }
 
         const occurredAt = new Date();
 
-        // Resolve Email to Profile
+        // 7. Core Database Execution Pipeline
         const { data: profile, error: profErr } = await supabaseAdmin
           .from("profiles")
           .select("id")
-          .eq("email", email)
+          .eq("email", normalizedEmail)
           .maybeSingle();
           
         if (profErr) return json({ error: "lookup_failed" }, 500);
@@ -173,23 +172,24 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
 
         const minuteBucket = Math.floor(occurredAt.getTime() / 60_000);
         const idempotencyKey = createHash("sha256")
-          .update(`email|${profile.id}|${rawType}|${minuteBucket}`)
+          .update(`email|${profile.id}|${normalizedType}|${minuteBucket}`)
           .digest("hex")
           .slice(0, 32);
 
         try {
           const result = await recordAttendance({
             userId: profile.id,
-            action: rawType as "check_in" | "check_out",
+            action: normalizedType as "check_in" | "check_out",
             idempotencyKey,
             occurredAt,
             source: "email_webhook",
             metadata: {
-              email,
-              subject: data.subject,
-              ingested_at: new Date().toISOString(),
+              email: normalizedEmail,
+              subject: payload?.data?.subject || "Teams Hook Ingest",
+              ingested_at: occurredAt.toISOString(),
             },
           });
+          
           return json({
             ok: result.ok,
             duplicate: result.duplicate,
