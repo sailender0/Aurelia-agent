@@ -20,10 +20,12 @@ import { Route as AuthenticatedManagerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
 import { Route as AuthenticatedExecRouteImport } from './routes/_authenticated/exec'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAttendanceLogRouteImport } from './routes/_authenticated/attendance-log'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicHooksOutboxDrainRouteImport } from './routes/api/public/hooks/outbox-drain'
 import { Route as ApiPublicHooksFridayDraftsRouteImport } from './routes/api/public/hooks/friday-drafts'
 import { Route as ApiPublicHooksActivitySignalRouteImport } from './routes/api/public/hooks/activity-signal'
+import { Route as ApiPublicAttendanceEmailWebhookRouteImport } from './routes/api/public/attendance/email-webhook'
 import { Route as ApiPublicAttendanceCheckInRouteImport } from './routes/api/public/attendance/check-in'
 
 const SignupRoute = SignupRouteImport.update({
@@ -80,6 +82,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAttendanceLogRoute =
+  AuthenticatedAttendanceLogRouteImport.update({
+    id: '/attendance-log',
+    path: '/attendance-log',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -103,6 +111,12 @@ const ApiPublicHooksActivitySignalRoute =
     path: '/api/public/hooks/activity-signal',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAttendanceEmailWebhookRoute =
+  ApiPublicAttendanceEmailWebhookRouteImport.update({
+    id: '/api/public/attendance/email-webhook',
+    path: '/api/public/attendance/email-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAttendanceCheckInRoute =
   ApiPublicAttendanceCheckInRouteImport.update({
     id: '/api/public/attendance/check-in',
@@ -115,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/attendance-log': typeof AuthenticatedAttendanceLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exec': typeof AuthenticatedExecRoute
   '/hr': typeof AuthenticatedHrRoute
@@ -123,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/attendance/check-in': typeof ApiPublicAttendanceCheckInRoute
+  '/api/public/attendance/email-webhook': typeof ApiPublicAttendanceEmailWebhookRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
   '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
@@ -132,6 +148,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/attendance-log': typeof AuthenticatedAttendanceLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exec': typeof AuthenticatedExecRoute
   '/hr': typeof AuthenticatedHrRoute
@@ -140,6 +157,7 @@ export interface FileRoutesByTo {
   '/teams': typeof AuthenticatedTeamsRoute
   '/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/attendance/check-in': typeof ApiPublicAttendanceCheckInRoute
+  '/api/public/attendance/email-webhook': typeof ApiPublicAttendanceEmailWebhookRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
   '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
@@ -151,6 +169,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/attendance-log': typeof AuthenticatedAttendanceLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/exec': typeof AuthenticatedExecRoute
   '/_authenticated/hr': typeof AuthenticatedHrRoute
@@ -159,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/teams': typeof AuthenticatedTeamsRoute
   '/_authenticated/timesheet': typeof AuthenticatedTimesheetRoute
   '/api/public/attendance/check-in': typeof ApiPublicAttendanceCheckInRoute
+  '/api/public/attendance/email-webhook': typeof ApiPublicAttendanceEmailWebhookRoute
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
   '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
@@ -170,6 +190,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin'
+    | '/attendance-log'
     | '/dashboard'
     | '/exec'
     | '/hr'
@@ -178,6 +199,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/timesheet'
     | '/api/public/attendance/check-in'
+    | '/api/public/attendance/email-webhook'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
     | '/api/public/hooks/outbox-drain'
@@ -187,6 +209,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin'
+    | '/attendance-log'
     | '/dashboard'
     | '/exec'
     | '/hr'
@@ -195,6 +218,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/timesheet'
     | '/api/public/attendance/check-in'
+    | '/api/public/attendance/email-webhook'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
     | '/api/public/hooks/outbox-drain'
@@ -205,6 +229,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_authenticated/admin'
+    | '/_authenticated/attendance-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/exec'
     | '/_authenticated/hr'
@@ -213,6 +238,7 @@ export interface FileRouteTypes {
     | '/_authenticated/teams'
     | '/_authenticated/timesheet'
     | '/api/public/attendance/check-in'
+    | '/api/public/attendance/email-webhook'
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
     | '/api/public/hooks/outbox-drain'
@@ -224,6 +250,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiPublicAttendanceCheckInRoute: typeof ApiPublicAttendanceCheckInRoute
+  ApiPublicAttendanceEmailWebhookRoute: typeof ApiPublicAttendanceEmailWebhookRoute
   ApiPublicHooksActivitySignalRoute: typeof ApiPublicHooksActivitySignalRoute
   ApiPublicHooksFridayDraftsRoute: typeof ApiPublicHooksFridayDraftsRoute
   ApiPublicHooksOutboxDrainRoute: typeof ApiPublicHooksOutboxDrainRoute
@@ -308,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/attendance-log': {
+      id: '/_authenticated/attendance-log'
+      path: '/attendance-log'
+      fullPath: '/attendance-log'
+      preLoaderRoute: typeof AuthenticatedAttendanceLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -336,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksActivitySignalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/attendance/email-webhook': {
+      id: '/api/public/attendance/email-webhook'
+      path: '/api/public/attendance/email-webhook'
+      fullPath: '/api/public/attendance/email-webhook'
+      preLoaderRoute: typeof ApiPublicAttendanceEmailWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/attendance/check-in': {
       id: '/api/public/attendance/check-in'
       path: '/api/public/attendance/check-in'
@@ -348,6 +389,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAttendanceLogRoute: typeof AuthenticatedAttendanceLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExecRoute: typeof AuthenticatedExecRoute
   AuthenticatedHrRoute: typeof AuthenticatedHrRoute
@@ -359,6 +401,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAttendanceLogRoute: AuthenticatedAttendanceLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExecRoute: AuthenticatedExecRoute,
   AuthenticatedHrRoute: AuthenticatedHrRoute,
@@ -378,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiPublicAttendanceCheckInRoute: ApiPublicAttendanceCheckInRoute,
+  ApiPublicAttendanceEmailWebhookRoute: ApiPublicAttendanceEmailWebhookRoute,
   ApiPublicHooksActivitySignalRoute: ApiPublicHooksActivitySignalRoute,
   ApiPublicHooksFridayDraftsRoute: ApiPublicHooksFridayDraftsRoute,
   ApiPublicHooksOutboxDrainRoute: ApiPublicHooksOutboxDrainRoute,
