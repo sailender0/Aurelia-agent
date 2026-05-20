@@ -38,6 +38,7 @@ function AuthLayout() {
     { to: "/hr", label: "HR Console", icon: Building2, show: hasAny(roles, ["hr", "admin"]) },
     { to: "/exec", label: "Executive", icon: BarChart3, show: hasAny(roles, ["executive", "admin"]) },
     { to: "/signals", label: "Activity Signals", icon: Activity, show: true },
+    { to: "/attendance-log", label: "Attendance Log", icon: Mail, show: hasAny(roles, ["hr", "admin", "executive"]) },
     { to: "/admin", label: "Admin", icon: Shield, show: hasAny(roles, ["admin"]) },
     { to: "/teams", label: "Teams Bot", icon: MessageSquare, show: hasAny(roles, ["admin"]) },
   ];
