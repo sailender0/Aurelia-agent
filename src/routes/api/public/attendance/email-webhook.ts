@@ -51,11 +51,12 @@ function json(body: unknown, status = 200) {
   });
 }
 
-/** Strip HTML tags so an `html`-only email still yields parseable lines. */
+/** Robust HTML stripper that ensures clean line breaks between block elements */
 function htmlToText(html: string): string {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<p[^>]*>/gi, "\n") // Turn paragraphs into clear newlines
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/p>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
@@ -65,18 +66,18 @@ function htmlToText(html: string): string {
     .replace(/&gt;/gi, ">");
 }
 
-/**
- * Parse "key: value" lines (case-insensitive keys, first occurrence wins).
- * Tolerates leading quote markers (>, |) from forwarded replies.
- */
+/** Parse "key: value" lines even if they are mashed together inside dirty HTML text strings */
 function parseKeyedLines(body: string): Record<string, string> {
   const out: Record<string, string> = {};
+  // Normalize spacing and split by line breaks
   for (const rawLine of body.split(/\r?\n/)) {
     const line = rawLine.replace(/^[>|\s]+/, "").trim();
     if (!line) continue;
+    
     const m = /^([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*(.+)$/.exec(line);
     if (!m) continue;
-    const key = m[1].toLowerCase();
+    
+    const key = m[1].toLowerCase().trim();
     if (!(key in out)) out[key] = m[2].trim();
   }
   return out;
@@ -101,32 +102,33 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
           return json({ error: "server_not_configured" }, 500);
         }
 
-        // Parse envelope
         let raw: unknown;
         try {
           raw = await request.json();
         } catch {
           return json({ error: "invalid_json" }, 400);
         }
+        
         const parsed = ResendEnvelope.safeParse(raw);
         if (!parsed.success) {
           return json({ error: "invalid_payload" }, 400);
         }
         const { data } = parsed.data;
 
-        // 1-2. Pull plain text (prefer `text`, fall back to stripped `html`)
-        const bodyText =
-          (data.text && data.text.trim().length > 0
-            ? data.text
-            : data.html
-              ? htmlToText(data.html)
-              : "") ?? "";
+        // Extract and clean raw body text profile
+        let bodyText = data.text ?? "";
+        if (data.html) {
+          // Process the HTML to ensure lines don't mash together
+          bodyText = htmlToText(data.html) + "\n" + bodyText;
+        }
+
         if (!bodyText.trim()) {
           return json({ error: "empty_email_body" }, 400);
         }
+
         const fields = parseKeyedLines(bodyText);
 
-        // 3. Auth — header first, then `secret:` line
+        // Security Check
         const headerSecret = request.headers.get("x-webhook-secret") ?? "";
         const bodySecret = fields.secret ?? "";
         const provided = headerSecret || bodySecret;
@@ -134,46 +136,50 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
           return json({ error: "unauthorized" }, 401);
         }
 
-        // 4. Extract attendance fields
+        // Extract input fields safely
         const email = (fields.email ?? "").toLowerCase();
-        const type = fields.type as "check_in" | "check_out" | undefined;
-        const timestampStr = fields.timestamp ?? fields.time;
+        let rawType = (fields.type ?? "").toLowerCase().replace(/\s+/g, "_");
+
+        // 🔄 NEW TRANSLATION LAYER: Map messy Power Automate strings to Zod Enums
+        if (rawType === "clock_in" || rawType === "check_in") rawType = "check_in";
+        if (rawType === "clock_out" || rawType === "check_out") rawType = "check_out";
 
         const FieldsSchema = z.object({
           email: z.string().email().max(255),
           type: z.enum(["check_in", "check_out"]),
         });
-        const fieldCheck = FieldsSchema.safeParse({ email, type });
+
+        const fieldCheck = FieldsSchema.safeParse({ email, type: rawType });
         if (!fieldCheck.success) {
-          return json({ error: "missing_or_invalid_fields" }, 400);
+          return json({ 
+            error: "missing_or_invalid_fields", 
+            details: fieldCheck.error.flatten(),
+            parsedFound: { email, type: rawType } 
+          }, 400);
         }
 
-        const occurredAt = timestampStr ? new Date(timestampStr) : new Date();
-        if (Number.isNaN(occurredAt.getTime())) {
-          return json({ error: "invalid_timestamp" }, 400);
-        }
+        const occurredAt = new Date();
 
-        // Resolve email → profile
+        // Resolve Email to Profile
         const { data: profile, error: profErr } = await supabaseAdmin
           .from("profiles")
           .select("id")
           .eq("email", email)
           .maybeSingle();
+          
         if (profErr) return json({ error: "lookup_failed" }, 500);
         if (!profile) return json({ error: "user_not_found" }, 404);
 
-        // Deterministic idempotency: user + type + minute bucket. A duplicate
-        // forward (same email re-delivered) within the same minute collapses.
         const minuteBucket = Math.floor(occurredAt.getTime() / 60_000);
         const idempotencyKey = createHash("sha256")
-          .update(`email|${profile.id}|${type}|${minuteBucket}`)
+          .update(`email|${profile.id}|${rawType}|${minuteBucket}`)
           .digest("hex")
           .slice(0, 32);
 
         try {
           const result = await recordAttendance({
             userId: profile.id,
-            action: type!,
+            action: rawType as "check_in" | "check_out",
             idempotencyKey,
             occurredAt,
             source: "email_webhook",
@@ -183,15 +189,12 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
               ingested_at: new Date().toISOString(),
             },
           });
-          return json(
-            {
-              ok: result.ok,
-              duplicate: result.duplicate,
-              session_id: result.sessionId,
-              status: result.status,
-            },
-            200,
-          );
+          return json({
+            ok: result.ok,
+            duplicate: result.duplicate,
+            session_id: result.sessionId,
+            status: result.status,
+          }, 200);
         } catch (e: any) {
           const msg = String(e?.message ?? e);
           if (msg.startsWith("not_a_working_day") || msg === "outside_work_window") {
@@ -201,7 +204,6 @@ export const Route = createFileRoute("/api/public/attendance/email-webhook")({
             return json({ error: msg }, 409);
           }
           if (msg === "profile_not_found") return json({ error: msg }, 404);
-          console.error("[email-webhook] unexpected", msg);
           return json({ error: "internal_error" }, 500);
         }
       },
