@@ -54,16 +54,17 @@ function json(body: unknown, status = 200) {
 /** Robust HTML stripper that ensures clean line breaks between block elements */
 function htmlToText(html: string): string {
   return html
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+   .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<p[^>]*>/gi, "\n") // Turn paragraphs into clear newlines
-    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<p[^>]*>/gi, "\n")       // Captures <p class="editor-paragraph"> and turns it into a newline
     .replace(/<\/p>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<br[^>]*>/gi, "\n")      // Captures <br>, <br/>, or <br class="..."> and turns it into a newline
+    .replace(/<[^>]+>/g, " ")          // Strips any remaining random tags safely
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">");
+    .replace(/&gt;/gi, ">")
+    .replace(/\n\s*\n/g, "\n");
 }
 
 /** Parse "key: value" lines even if they are mashed together inside dirty HTML text strings */
