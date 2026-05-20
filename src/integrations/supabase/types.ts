@@ -68,36 +68,6 @@ export type Database = {
         }
         Relationships: []
       }
-      attendance: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          raw_subject: string | null
-          source: string
-          timestamp: string
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          raw_subject?: string | null
-          source?: string
-          timestamp?: string
-          type: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          raw_subject?: string | null
-          source?: string
-          timestamp?: string
-          type?: string
-        }
-        Relationships: []
-      }
       attendance_events: {
         Row: {
           event_type: string
