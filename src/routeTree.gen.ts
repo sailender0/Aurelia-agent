@@ -20,6 +20,7 @@ import { Route as AuthenticatedManagerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
 import { Route as AuthenticatedExecRouteImport } from './routes/_authenticated/exec'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAttendanceLogRouteImport } from './routes/_authenticated/attendance-log'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicHooksOutboxDrainRouteImport } from './routes/api/public/hooks/outbox-drain'
 import { Route as ApiPublicHooksFridayDraftsRouteImport } from './routes/api/public/hooks/friday-drafts'
@@ -81,6 +82,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAttendanceLogRoute =
+  AuthenticatedAttendanceLogRouteImport.update({
+    id: '/attendance-log',
+    path: '/attendance-log',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/attendance-log': typeof AuthenticatedAttendanceLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exec': typeof AuthenticatedExecRoute
   '/hr': typeof AuthenticatedHrRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/attendance-log': typeof AuthenticatedAttendanceLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exec': typeof AuthenticatedExecRoute
   '/hr': typeof AuthenticatedHrRoute
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/attendance-log': typeof AuthenticatedAttendanceLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/exec': typeof AuthenticatedExecRoute
   '/_authenticated/hr': typeof AuthenticatedHrRoute
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin'
+    | '/attendance-log'
     | '/dashboard'
     | '/exec'
     | '/hr'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin'
+    | '/attendance-log'
     | '/dashboard'
     | '/exec'
     | '/hr'
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_authenticated/admin'
+    | '/_authenticated/attendance-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/exec'
     | '/_authenticated/hr'
@@ -322,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/attendance-log': {
+      id: '/_authenticated/attendance-log'
+      path: '/attendance-log'
+      fullPath: '/attendance-log'
+      preLoaderRoute: typeof AuthenticatedAttendanceLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -369,6 +389,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAttendanceLogRoute: typeof AuthenticatedAttendanceLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExecRoute: typeof AuthenticatedExecRoute
   AuthenticatedHrRoute: typeof AuthenticatedHrRoute
@@ -380,6 +401,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAttendanceLogRoute: AuthenticatedAttendanceLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExecRoute: AuthenticatedExecRoute,
   AuthenticatedHrRoute: AuthenticatedHrRoute,
