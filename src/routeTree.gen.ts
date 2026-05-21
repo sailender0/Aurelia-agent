@@ -21,6 +21,7 @@ import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
 import { Route as AuthenticatedExecRouteImport } from './routes/_authenticated/exec'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicHooksReconcileAttendanceRouteImport } from './routes/api/public/hooks/reconcile-attendance'
 import { Route as ApiPublicHooksOutboxDrainRouteImport } from './routes/api/public/hooks/outbox-drain'
 import { Route as ApiPublicHooksFridayDraftsRouteImport } from './routes/api/public/hooks/friday-drafts'
 import { Route as ApiPublicHooksActivitySignalRouteImport } from './routes/api/public/hooks/activity-signal'
@@ -86,6 +87,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksReconcileAttendanceRoute =
+  ApiPublicHooksReconcileAttendanceRouteImport.update({
+    id: '/api/public/hooks/reconcile-attendance',
+    path: '/api/public/hooks/reconcile-attendance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksOutboxDrainRoute =
   ApiPublicHooksOutboxDrainRouteImport.update({
     id: '/api/public/hooks/outbox-drain',
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
   '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
+  '/api/public/hooks/reconcile-attendance': typeof ApiPublicHooksReconcileAttendanceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -152,6 +160,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
   '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
+  '/api/public/hooks/reconcile-attendance': typeof ApiPublicHooksReconcileAttendanceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -172,6 +181,7 @@ export interface FileRoutesById {
   '/api/public/hooks/activity-signal': typeof ApiPublicHooksActivitySignalRoute
   '/api/public/hooks/friday-drafts': typeof ApiPublicHooksFridayDraftsRoute
   '/api/public/hooks/outbox-drain': typeof ApiPublicHooksOutboxDrainRoute
+  '/api/public/hooks/reconcile-attendance': typeof ApiPublicHooksReconcileAttendanceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
     | '/api/public/hooks/outbox-drain'
+    | '/api/public/hooks/reconcile-attendance'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
     | '/api/public/hooks/outbox-drain'
+    | '/api/public/hooks/reconcile-attendance'
   id:
     | '__root__'
     | '/'
@@ -229,6 +241,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/activity-signal'
     | '/api/public/hooks/friday-drafts'
     | '/api/public/hooks/outbox-drain'
+    | '/api/public/hooks/reconcile-attendance'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -241,6 +254,7 @@ export interface RootRouteChildren {
   ApiPublicHooksActivitySignalRoute: typeof ApiPublicHooksActivitySignalRoute
   ApiPublicHooksFridayDraftsRoute: typeof ApiPublicHooksFridayDraftsRoute
   ApiPublicHooksOutboxDrainRoute: typeof ApiPublicHooksOutboxDrainRoute
+  ApiPublicHooksReconcileAttendanceRoute: typeof ApiPublicHooksReconcileAttendanceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -329,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/reconcile-attendance': {
+      id: '/api/public/hooks/reconcile-attendance'
+      path: '/api/public/hooks/reconcile-attendance'
+      fullPath: '/api/public/hooks/reconcile-attendance'
+      preLoaderRoute: typeof ApiPublicHooksReconcileAttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/outbox-drain': {
       id: '/api/public/hooks/outbox-drain'
       path: '/api/public/hooks/outbox-drain'
@@ -403,7 +424,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksActivitySignalRoute: ApiPublicHooksActivitySignalRoute,
   ApiPublicHooksFridayDraftsRoute: ApiPublicHooksFridayDraftsRoute,
   ApiPublicHooksOutboxDrainRoute: ApiPublicHooksOutboxDrainRoute,
+  ApiPublicHooksReconcileAttendanceRoute:
+    ApiPublicHooksReconcileAttendanceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
