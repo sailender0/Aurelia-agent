@@ -31,8 +31,20 @@ function LoginPage() {
   }
 
   async function microsoft() {
-    const r = await lovable.auth.signInWithOAuth("microsoft", { redirect_uri: window.location.origin + "/dashboard" });
-    if (r.error) toast.error("Microsoft sign-in failed — enable Microsoft (Entra ID) in Lovable Cloud → Auth.");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        scopes: "email openid profile offline_access User.Read",
+        redirectTo: window.location.origin + "/dashboard",
+      },
+    });
+    if (error) {
+      toast.error(
+        "Microsoft sign-in failed. Confirm the Azure provider is enabled in the backend with AZURE_CLIENT_ID / AZURE_CLIENT_SECRET and that the redirect URI " +
+          window.location.origin +
+          "/dashboard is registered in Entra ID.",
+      );
+    }
   }
 
   return (
