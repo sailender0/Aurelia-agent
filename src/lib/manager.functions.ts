@@ -8,6 +8,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { writeAudit } from "@/modules/audit";
 
 export const decideTimesheet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -78,6 +79,22 @@ export const decideTimesheet = createServerFn({ method: "POST" })
         status: "pending",
       });
     if (oxErr) throw new Error(oxErr.message);
+
+    // 4) Decision-trace audit row
+    await writeAudit({
+      actorId: userId,
+      actorKind: "user",
+      action: `timesheet.${data.decision}`,
+      targetTable: "draft_timesheets",
+      targetId: data.timesheetId,
+      before: { status: ts.status },
+      after: { status: data.decision },
+      context: {
+        report_user_id: ts.user_id,
+        week_start: ts.week_start,
+        comment: data.comment ?? null,
+      },
+    });
 
     return { ok: true, decision: data.decision };
   });

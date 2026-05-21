@@ -30,6 +30,11 @@ function LoginPage() {
     if (r.error) toast.error("Google sign-in failed");
   }
 
+  async function microsoft() {
+    const r = await lovable.auth.signInWithOAuth("microsoft", { redirect_uri: window.location.origin + "/dashboard" });
+    if (r.error) toast.error("Microsoft sign-in failed — enable Microsoft (Entra ID) in Lovable Cloud → Auth.");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)]">
@@ -51,7 +56,10 @@ function LoginPage() {
         <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
           <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
         </div>
-        <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
+        <div className="space-y-2">
+          <Button variant="outline" className="w-full" onClick={microsoft}>Continue with Microsoft (Entra ID)</Button>
+          <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
+        </div>
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here? <Link to="/signup" className="text-primary underline">Create an account</Link>
         </p>

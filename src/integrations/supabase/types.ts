@@ -169,6 +169,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_kind: string
+          after: Json | null
+          before: Json | null
+          context: Json
+          created_at: string
+          id: string
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_kind?: string
+          after?: Json | null
+          before?: Json | null
+          context?: Json
+          created_at?: string
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_kind?: string
+          after?: Json | null
+          before?: Json | null
+          context?: Json
+          created_at?: string
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string
@@ -663,6 +702,10 @@ export type Database = {
         Returns: boolean
       }
       is_manager_of: { Args: { _employee: string }; Returns: boolean }
+      reconcile_missed_checkouts: {
+        Args: { p_cutoff_hours?: number; p_default_hours?: number }
+        Returns: Json
+      }
       record_attendance_action:
         | {
             Args: {
