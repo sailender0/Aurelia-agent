@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           duration_minutes: number | null
+          email: string | null
           id: string
           metadata: Json
           occurred_at: string
@@ -29,6 +30,7 @@ export type Database = {
         Insert: {
           created_at?: string
           duration_minutes?: number | null
+          email?: string | null
           id?: string
           metadata?: Json
           occurred_at: string
@@ -40,6 +42,7 @@ export type Database = {
         Update: {
           created_at?: string
           duration_minutes?: number | null
+          email?: string | null
           id?: string
           metadata?: Json
           occurred_at?: string
@@ -404,6 +407,7 @@ export type Database = {
           employment_type: string
           id: string
           manager_id: string | null
+          timezone: string
           timezone_preference: string
           work_hours_id: string | null
         }
@@ -415,6 +419,7 @@ export type Database = {
           employment_type?: string
           id: string
           manager_id?: string | null
+          timezone?: string
           timezone_preference?: string
           work_hours_id?: string | null
         }
@@ -426,6 +431,7 @@ export type Database = {
           employment_type?: string
           id?: string
           manager_id?: string | null
+          timezone?: string
           timezone_preference?: string
           work_hours_id?: string | null
         }
@@ -702,6 +708,10 @@ export type Database = {
         Returns: boolean
       }
       is_manager_of: { Args: { _employee: string }; Returns: boolean }
+      process_attendance_signal: {
+        Args: { signal_type: string; user_email: string; utc_timestamp: string }
+        Returns: undefined
+      }
       reconcile_missed_checkouts: {
         Args: { p_cutoff_hours?: number; p_default_hours?: number }
         Returns: Json
