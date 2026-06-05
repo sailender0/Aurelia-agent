@@ -47,6 +47,23 @@ function LoginPage() {
     }
   }
 
+  async function github() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        scopes: "read:user user:email repo",
+        redirectTo: window.location.origin + "/dashboard",
+      },
+    });
+    if (error) {
+      toast.error(
+        "GitHub sign-in failed. Enable the GitHub provider in the backend (Authentication → Providers) and add the redirect URI " +
+          window.location.origin +
+          "/dashboard to your GitHub OAuth app.",
+      );
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)]">
