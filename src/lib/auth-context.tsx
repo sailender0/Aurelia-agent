@@ -29,6 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        // Persist GitHub OAuth provider token so we can call the GitHub API later.
+        const provider = (s.user.app_metadata as any)?.provider;
+        if (provider === "github" && s.provider_token) {
+          try { localStorage.setItem("github_provider_token", s.provider_token); } catch {}
+        }
         setTimeout(() => loadRoles(s.user.id), 0);
       } else {
         setRoles([]);
