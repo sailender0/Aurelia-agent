@@ -47,6 +47,23 @@ function LoginPage() {
     }
   }
 
+  async function github() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        scopes: "read:user user:email repo",
+        redirectTo: window.location.origin + "/dashboard",
+      },
+    });
+    if (error) {
+      toast.error(
+        "GitHub sign-in failed. Enable the GitHub provider in the backend (Authentication → Providers) and add the redirect URI " +
+          window.location.origin +
+          "/dashboard to your GitHub OAuth app.",
+      );
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)]">
@@ -70,7 +87,9 @@ function LoginPage() {
         </div>
         <div className="space-y-2">
           <Button variant="outline" className="w-full" onClick={microsoft}>Continue with Microsoft (Entra ID)</Button>
+          <Button variant="outline" className="w-full" onClick={github}>Continue with GitHub</Button>
           <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
+
         </div>
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here? <Link to="/signup" className="text-primary underline">Create an account</Link>
