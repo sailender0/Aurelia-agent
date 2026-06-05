@@ -91,6 +91,9 @@ function Dashboard() {
         </Card>
       </div>
 
+      <GithubStatsCard />
+
+
       <Card>
         <CardHeader><CardTitle>Recent attendance</CardTitle></CardHeader>
         <CardContent>
