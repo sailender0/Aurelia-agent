@@ -87,7 +87,9 @@ function LoginPage() {
         </div>
         <div className="space-y-2">
           <Button variant="outline" className="w-full" onClick={microsoft}>Continue with Microsoft (Entra ID)</Button>
+          <Button variant="outline" className="w-full" onClick={github}>Continue with GitHub</Button>
           <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
+
         </div>
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here? <Link to="/signup" className="text-primary underline">Create an account</Link>
