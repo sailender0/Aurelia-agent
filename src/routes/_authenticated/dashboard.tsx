@@ -10,6 +10,7 @@ import { Clock, PlayCircle, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { mondayOf, fmtHours } from "@/lib/week";
 import { teamsNotifyMyEvent } from "@/lib/teams.functions";
+import { GithubStatsCard } from "@/components/github-stats-card";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
